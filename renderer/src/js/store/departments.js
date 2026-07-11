@@ -7,18 +7,32 @@ let _departments = [
     { id: 6, name: 'Library Services', description: 'Library and information management' },
 ];
 let _nextDeptId = 7;
-function getAllDepartments() { return _departments; }
-function getDepartmentById(id) { return _departments.find(d => d.id === id) ?? null; }
-function addDepartment(data) {
+
+export function initDepartments() {
+    // Data is initialized inline above; this hook exists for future
+    // async loading (e.g. from localStorage or an API).
+}
+
+export function getAllDepartments() { return _departments; }
+
+export function getDepartmentById(id) { return _departments.find(d => d.id === id) ?? null; }
+
+export function addDepartment(data) {
     const dept = { id: _nextDeptId++, ...data };
     _departments.push(dept);
     return dept;
 }
-function updateDepartment(id, data) {
+
+export function updateDepartment(id, data) {
     const idx = _departments.findIndex(d => d.id === id);
     if (idx === -1) throw new Error(`Department #${id} not found.`);
     _departments[idx] = { ..._departments[idx], ...data };
     return _departments[idx];
 }
-function deleteDepartment(id) { _departments = _departments.filter(d => d.id !== id); }
-function replaceDepts(arr) { _departments = arr; _nextDeptId = Math.max(...arr.map(d => d.id), 0) + 1; }
+
+export function deleteDepartment(id) { _departments = _departments.filter(d => d.id !== id); }
+
+export function replaceDepts(arr) {
+    _departments = arr;
+    _nextDeptId = Math.max(...arr.map(d => d.id), 0) + 1;
+}

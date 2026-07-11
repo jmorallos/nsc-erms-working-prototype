@@ -24,16 +24,14 @@
             <p>College HR Management System</p>
             <div class="login-field">
                 <label>Username</label>
-                <input type="text" id="login-user" placeholder="Enter username"
-                    onkeydown="if(event.key==='Enter') handleLogin()" />
+                <input type="text" id="login-user" placeholder="Enter username" />
             </div>
             <div class="login-field">
                 <label>Password</label>
-                <input type="password" id="login-pass" placeholder="Enter password"
-                    onkeydown="if(event.key==='Enter') handleLogin()" />
+                <input type="password" id="login-pass" placeholder="Enter password"/>
             </div>
             <div class="login-err" id="login-err"></div>
-            <button class="login-btn" onclick="handleLogin()">Sign In</button>
+            <button id="login-btn" class="login-btn">Sign In</button>
             <div class="login-footer">EduRecords v1.0.0 &middot; Local Access Only</div>
         </div>
     </div>
@@ -57,7 +55,7 @@
 
             <nav id="sidebar-nav">
                 <div class="nav-section-label">Records</div>
-                <a data-page="employees" class="active" onclick="navTo('employees',this)">
+                <a data-page="employees" class="active">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
@@ -67,7 +65,7 @@
                     Employees
                     <span class="nav-badge" id="emp-count-badge">7</span>
                 </a>
-                <a data-page="departments" onclick="navTo('departments',this)">
+                <a data-page="departments">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                         <polyline points="9 22 9 12 15 12 15 22" />
@@ -75,7 +73,7 @@
                     Departments
                 </a>
                 <div class="nav-section-label" style="margin-top:8px;">Tools</div>
-                <a data-page="backup" onclick="navTo('backup',this)">
+                <a data-page="backup">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                         <polyline points="17 21 17 13 7 13 7 21" />
@@ -83,7 +81,7 @@
                     </svg>
                     Backup &amp; Restore
                 </a>
-                <a data-page="export" onclick="navTo('export',this)">
+                <a data-page="export">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
@@ -92,7 +90,7 @@
                     Export
                 </a>
                 <div class="nav-section-label" style="margin-top:8px;">System</div>
-                <a data-page="settings" onclick="navTo('settings',this)">
+                <a data-page="settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3" />
                         <path
@@ -108,7 +106,7 @@
                     <div class="su-name" id="su-name">Admin</div>
                     <div class="su-role" id="su-role">HR Administrator</div>
                 </div>
-                <button class="su-logout" title="Logout" onclick="handleLogout()">
+                <button id="logout-btn" class="su-logout" title="Logout" onclick="handleLogout()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
@@ -126,8 +124,7 @@
                         <circle cx="11" cy="11" r="8" />
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
-                    <input type="text" id="search-input" placeholder="Search employees…"
-                        oninput="handleSearch(this.value)" />
+                    <input type="text" id="search-input" placeholder="Search employees…" />
                 </div>
             </div>
 
@@ -136,7 +133,7 @@
                 <!-- Employees Page -->
                 <div id="page-employees" class="page active">
                     <div class="toolbar">
-                        <button class="btn btn-primary" onclick="openEmployeeModal()">
+                        <button id="add-emp-btn" class="btn btn-primary" >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -144,10 +141,10 @@
                             </svg>
                             Add Employee
                         </button>
-                        <select id="filter-dept" onchange="renderEmployeeTable(App.searchQuery)">
+                        <select id="filter-dept">
                             <option value="">All Departments</option>
                         </select>
-                        <select id="filter-status" onchange="renderEmployeeTable(App.searchQuery)">
+                        <select id="filter-status">
                             <option value="">All Status</option>
                             <option>Active</option>
                             <option>Inactive</option>
@@ -175,7 +172,7 @@
                 <!-- Departments Page -->
                 <div id="page-departments" class="page">
                     <div class="toolbar">
-                        <button class="btn btn-primary" onclick="openDeptModal()">
+                        <button id="add-dept-btn" class="btn btn-primary" onclick="openDeptModal()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -200,7 +197,7 @@
                                 Create Backup
                             </h4>
                             <p>Save all records to a .json file you can restore any time.</p>
-                            <button class="btn btn-primary" onclick="handleCreateBackup()"
+                            <button id="create-backup-btn" class="btn btn-primary"
                                 style="width:100%;justify-content:center;">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -242,7 +239,7 @@
                     <p style="font-size:13px;color:var(--text-2);margin-bottom:22px;">Export all employee records to
                         your preferred format.</p>
                     <div class="export-grid">
-                        <div class="export-card" onclick="exportToCSV()">
+                        <div id="export-csv-btn" class="export-card">
                             <svg viewBox="0 0 24 24" fill="none" stroke="#0d9373" stroke-width="1.5">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
@@ -252,7 +249,7 @@
                             <h4>Export to CSV</h4>
                             <p>Open in Excel or Google Sheets</p>
                         </div>
-                        <div class="export-card" onclick="exportToPDF()">
+                        <div id="export-pdf-btn" class="export-card">
                             <svg viewBox="0 0 24 24" fill="none" stroke="#c8253c" stroke-width="1.5">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
@@ -276,7 +273,7 @@
                                     <div class="sl-title">Dark Mode</div>
                                     <div class="sl-desc">Switch to dark theme</div>
                                 </div>
-                                <div class="toggle" id="dark-toggle" onclick="handleToggleDark()">
+                                <div class="toggle" id="dark-toggle">
                                     <div class="knob"></div>
                                 </div>
                             </div>
@@ -286,17 +283,17 @@
                                     <div class="sl-desc">Adjust text size across the app</div>
                                 </div>
                                 <div class="fs-btns">
-                                    <button class="fs-btn" onclick="handleSetFont(13,this)">S</button>
-                                    <button class="fs-btn active" onclick="handleSetFont(14,this)">M</button>
-                                    <button class="fs-btn" onclick="handleSetFont(15,this)">L</button>
-                                    <button class="fs-btn" onclick="handleSetFont(16,this)">XL</button>
+                                    <button data-size="13" class="fs-btn">S</button>
+                                    <button data-size="14" class="fs-btn active">M</button>
+                                    <button data-size="15" class="fs-btn">L</button>
+                                    <button data-size="16" class="fs-btn">XL</button>
                                 </div>
                             </div>
                         </div>
                         <div class="settings-card">
                             <h4>User Accounts</h4>
                             <table class="user-table" id="user-table"></table>
-                            <button class="btn btn-primary" style="margin-top:16px" onclick="openAddUserModal()">
+                            <button id="add-user-btn" class="btn btn-primary" style="margin-top:16px">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2.5">
                                     <line x1="12" y1="5" x2="12" y2="19" />
@@ -319,7 +316,7 @@
                                     <div class="sl-title">Records</div>
                                     <div class="sl-desc" id="db-stats">—</div>
                                 </div>
-                                <button class="btn btn-sm btn-edit" onclick="refreshStats()">Refresh</button>
+                                <button id="refresh" class="btn btn-sm btn-edit">Refresh</button>
                             </div>
                         </div>
                     </div>
@@ -330,13 +327,13 @@
     </div><!-- /app -->
 
     <!-- ── PROFILE PANEL ───────────────────────────────────────────── -->
-    <div id="panel-backdrop" onclick="closeProfilePanel()"></div>
+    <div id="panel-backdrop"></div>
     <div id="panel">
         <div class="panel-hdr" id="panel-header"></div>
         <div class="panel-tabs">
-            <button class="tab-btn active" onclick="switchTab('info',this)">Personal Info</button>
-            <button class="tab-btn" onclick="switchTab('employment',this)">Employment</button>
-            <button class="tab-btn" onclick="switchTab('docs',this)">201 File</button>
+            <button data-tab="info" class="tab-btn active">Personal Info</button>
+            <button data-tab="employment" class="tab-btn">Employment</button>
+            <button data-tab="docs" class="tab-btn">201 File</button>
         </div>
         <div class="panel-body">
             <div id="tab-info" class="tab-pane active"></div>
@@ -348,7 +345,7 @@
     <!-- ── EMPLOYEE MODAL ──────────────────────────────────────────── -->
     <div id="emp-overlay" class="overlay">
         <div class="modal" style="width:580px;">
-            <button class="modal-close" onclick="closeEmployeeModal()">×</button>
+            <button id="close-emp-modal" class="modal-close">×</button>
             <h3 id="emp-modal-title">Add Employee</h3>
             <div class="pic-wrap">
                 <div id="pic-preview" class="pic-ini">?</div>
@@ -373,8 +370,8 @@
                 <div class="fg"><label>Start Date</label><input id="f-start" type="date" /></div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeEmployeeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+                <button id="emp-modal-cancel" class="btn btn-cancel">Cancel</button>
+                <button id="emp-modal-save" class="btn btn-primary">Save Employee</button>
             </div>
         </div>
     </div>
@@ -382,13 +379,13 @@
     <!-- ── DEPT MODAL ──────────────────────────────────────────────── -->
     <div id="dept-overlay" class="overlay">
         <div class="modal" style="width:400px;">
-            <button class="modal-close" onclick="closeDeptModal()">×</button>
+            <button id="close-dept-modal" class="modal-close">×</button>
             <h3 id="dept-modal-title">Add Department</h3>
             <div class="fg" style="margin-bottom:14px;"><label>Name *</label><input id="d-name" type="text" /></div>
             <div class="fg"><label>Description</label><textarea id="d-desc"></textarea></div>
             <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeDeptModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveDept()">Save</button>
+                <button id="dept-modal-cancel" class="btn btn-cancel">Cancel</button>
+                <button id="dept-modal-save" class="btn btn-primary">Save</button>
             </div>
         </div>
     </div>
@@ -396,7 +393,7 @@
     <!-- ── ADD USER MODAL ──────────────────────────────────────────── -->
     <div id="user-overlay" class="overlay">
         <div class="modal" style="width:400px;">
-            <button class="modal-close" onclick="closeAddUserModal()">×</button>
+            <button id="close-user-modal" class="modal-close">×</button>
             <h3>Add User Account</h3>
             <div class="fg" style="margin-bottom:13px;"><label>Full Name *</label><input id="u-name" type="text"
                     placeholder="e.g. Maria Santos" /></div>
@@ -412,8 +409,8 @@
                 </select>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeAddUserModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="handleSaveUser()">Create User</button>
+                <button id="user-modal-cancel" class="btn btn-cancel">Cancel</button>
+                <button id="user-modal-save" class="btn btn-primary">Create User</button>
             </div>
         </div>
     </div>
@@ -421,7 +418,7 @@
     <!-- ── SCAN MODAL ──────────────────────────────────────────────── -->
     <div id="scan-overlay" class="overlay">
         <div class="modal" style="width:480px;">
-            <button class="modal-close" onclick="closeScanModal()">×</button>
+            <button id="scan-close-btn" class="modal-close">×</button>
             <h3>Scan Document</h3>
             <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;margin-top:-10px;">Detected devices:</p>
             <div id="scan-dev-list"></div>
@@ -459,8 +456,8 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeScanModal()">Cancel</button>
-                <button class="btn btn-primary" id="scan-btn" onclick="handleStartScan()">
+                <button id="close-scan-modal" class="btn btn-cancel">Cancel</button>
+                <button class="btn btn-primary" id="scan-btn">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="7" width="20" height="10" rx="2" />
                         <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />

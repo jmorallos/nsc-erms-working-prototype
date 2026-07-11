@@ -1,3 +1,5 @@
+import { getToday } from '../utils/helpers.js';
+
 let _employees = [
     {
         id: 1, fname: 'Maria', lname: 'Santos', email: 'm.santos@college.edu.ph', contact: '09171234567', address: '123 Rizal St, Manila', position: 'Dean', dept: 'College of Arts', status: 'Active', start_date: '2018-06-01', picture: null, docs: [
@@ -34,34 +36,52 @@ let _employees = [
 ];
 let _nextEmpId = 8;
 let _nextDocId = 100;
-const SAMPLE_DOC_NAMES = ['Personal Data Sheet (CS Form 212)', 'Employment Contract', 'Appointment Paper', 'Service Record', 'Certificate of Eligibility (CSC)', 'NBI Clearance', 'Transcript of Records', 'Oath of Office', 'Medical Certificate'];
-function getAllEmployees() { return _employees; }
-function getEmployeeById(id) { return _employees.find(e => e.id === id) ?? null; }
-function addEmployee(data) {
+
+const SAMPLE_DOC_NAMES = [
+    'Personal Data Sheet (CS Form 212)', 'Employment Contract', 'Appointment Paper',
+    'Service Record', 'Certificate of Eligibility (CSC)', 'NBI Clearance',
+    'Transcript of Records', 'Oath of Office', 'Medical Certificate',
+];
+
+export function initEmployees() {
+    // Data is initialized inline above; this hook exists for future
+    // async loading (e.g. from localStorage or an API).
+}
+
+export function getAllEmployees() { return _employees; }
+
+export function getEmployeeById(id) { return _employees.find(e => e.id === id) ?? null; }
+
+export function addEmployee(data) {
     const e = { id: _nextEmpId++, ...data, docs: [] };
     _employees.push(e);
     return e;
 }
-function updateEmployee(id, data) {
+
+export function updateEmployee(id, data) {
     const idx = _employees.findIndex(e => e.id === id);
     if (idx === -1) throw new Error(`Employee #${id} not found.`);
     _employees[idx] = { ..._employees[idx], ...data };
     return _employees[idx];
 }
-function deleteEmployee(id) { _employees = _employees.filter(e => e.id !== id); }
-function addDocument(employeeId, docData) {
+
+export function deleteEmployee(id) { _employees = _employees.filter(e => e.id !== id); }
+
+export function addDocument(employeeId, docData) {
     const emp = getEmployeeById(employeeId);
     if (!emp) throw new Error(`Employee #${employeeId} not found.`);
     const doc = { id: _nextDocId++, ...docData };
     emp.docs.push(doc);
     return doc;
 }
-function deleteDocument(employeeId, docId) {
+
+export function deleteDocument(employeeId, docId) {
     const emp = getEmployeeById(employeeId);
     if (!emp) throw new Error(`Employee #${employeeId} not found.`);
     emp.docs = emp.docs.filter(d => d.id !== docId);
 }
-function addSampleDocuments(employeeId) {
+
+export function addSampleDocuments(employeeId) {
     const emp = getEmployeeById(employeeId);
     if (!emp) throw new Error(`Employee #${employeeId} not found.`);
     const existing = new Set(emp.docs.map(d => d.name));
@@ -75,7 +95,8 @@ function addSampleDocuments(employeeId) {
     });
     return added;
 }
-function replaceAll(employeesArray) {
+
+export function replaceAll(employeesArray) {
     _employees = employeesArray;
     _nextEmpId = Math.max(...employeesArray.map(e => e.id), 0) + 1;
 }

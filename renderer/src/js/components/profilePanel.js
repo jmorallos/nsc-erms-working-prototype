@@ -1,19 +1,45 @@
+import { getEmployeeById, deleteEmployee } from '../store/employees.js';
+import { getEl, setHTML, getInitials, getStatusBadge, getYearsOfService } from '../utils/helpers.js';
+import { showToast } from '../utils/toast.js';
+import { renderEmployeeTable } from './employeeTable.js';
+import { openEmployeeModal } from './employeeModal.js';
+import { renderTabDocs } from './documents.js';
+
 let _panelEmpId = null;
-function openProfilePanel(empId) {
+let _getSearchQuery = () => '';
+
+export function initProfilePanel(getSearchQuery) {
+    _getSearchQuery = getSearchQuery;
+    getEl('panel-backdrop').addEventListener('click', closeProfilePanel);
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab, btn));
+    });
+}
+
+export function openProfilePanel(empId) {
     const emp = getEmployeeById(empId);
     if (!emp) return;
     _panelEmpId = empId;
-    _renderPanelHeader(emp);
-    _activateTab('info');
+    renderPanelHeader(emp);
+    activateTab('info');
     renderTabInfo(emp);
     getEl('panel').classList.add('open');
     getEl('panel-backdrop').classList.add('open');
 }
-function closeProfilePanel() {
+
+export function closeProfilePanel() {
     getEl('panel').classList.remove('open');
     getEl('panel-backdrop').classList.remove('open');
     _panelEmpId = null;
 }
+
+export function refreshPanelHeader() {
+    if (_panelEmpId === null) return;
+    const emp = getEmployeeById(_panelEmpId);
+    if (emp) renderPanelHeader(emp);
+}
+
 function switchTab(tabName, buttonEl) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     buttonEl.classList.add('active');
@@ -26,11 +52,7 @@ function switchTab(tabName, buttonEl) {
     if (tabName === 'employment') renderTabEmployment(emp);
     if (tabName === 'docs') renderTabDocs(emp);
 }
-function refreshPanelHeader() {
-    if (_panelEmpId === null) return;
-    const emp = getEmployeeById(_panelEmpId);
-    if (emp) _renderPanelHeader(emp);
-}
+
 function renderTabInfo(emp) {
     setHTML('tab-info', `
     <div class="info-section">
@@ -41,6 +63,7 @@ function renderTabInfo(emp) {
       <div class="info-row"><span class="ir-label">Address</span><span class="ir-val">${emp.address || '—'}</span></div>
     </div>`);
 }
+
 function renderTabEmployment(emp) {
     setHTML('tab-employment', `
     <div class="info-section">
@@ -53,12 +76,14 @@ function renderTabEmployment(emp) {
       <div class="info-row"><span class="ir-label">Years of Service</span><span class="ir-val">${getYearsOfService(emp.start_date)}</span></div>
     </div>`);
 }
-function _renderPanelHeader(emp) {
+
+function renderPanelHeader(emp) {
     const pic = emp.picture
         ? `<img src="${emp.picture}" class="ph-avatar-lg" alt=""/>`
         : `<div class="ph-ini-lg">${getInitials(emp.fname, emp.lname)}</div>`;
+
     setHTML('panel-header', `
-    <button class="ph-close" onclick="closeProfilePanel()">×</button>
+    <button class="ph-close" id="panel-close-btn">×</button>
     ${pic}
     <h2>${emp.fname} ${emp.lname}</h2>
     <div class="ph-pos">${emp.position} &middot; ${emp.dept || 'No Department'}</div>
@@ -68,18 +93,27 @@ function _renderPanelHeader(emp) {
       ${emp.start_date ? `<span class="ph-badge">Since ${emp.start_date}</span>` : ''}
     </div>
     <div class="ph-actions">
-      <button class="phbtn phbtn-edit" onclick="openEmployeeModal(${emp.id});closeProfilePanel()">Edit</button>
-      <button class="phbtn phbtn-del"  onclick="handleDeleteEmployee(${emp.id})">Delete</button>
+      <button class="phbtn phbtn-edit" id="panel-edit-btn">Edit</button>
+      <button class="phbtn phbtn-del" id="panel-delete-btn">Delete</button>
     </div>`);
+
+    document.getElementById('panel-close-btn').addEventListener('click', closeProfilePanel);
+    document.getElementById('panel-edit-btn').addEventListener('click', () => {
+        openEmployeeModal(emp.id);
+        closeProfilePanel();
+    });
+    document.getElementById('panel-delete-btn').addEventListener('click', () => handleDeleteEmployee(emp.id));
 }
-function _activateTab(name) {
+
+function activateTab(name) {
     document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
     document.querySelectorAll('.tab-pane').forEach((p, i) => p.classList.toggle('active', i === 0));
 }
+
 function handleDeleteEmployee(empId) {
     if (!confirm('Delete this employee? This cannot be undone.')) return;
     deleteEmployee(empId);
     closeProfilePanel();
-    renderEmployeeTable(App.searchQuery);
+    renderEmployeeTable(_getSearchQuery());
     showToast('Employee deleted.', 'success');
 }

@@ -1,12 +1,28 @@
+import { getAllEmployees } from '../store/employees.js';
+import { getEl, getToday } from '../utils/helpers.js';
+import { showToast } from '../utils/toast.js';
+
+export function initExport() {
+    getEl('export-csv-btn').addEventListener('click', exportToCSV);
+    getEl('export-pdf-btn').addEventListener('click', exportToPDF);
+}
+
 function exportToCSV() {
     const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Contact', 'Address', 'Position', 'Department', 'Status', 'Start Date'];
-    const rows = getAllEmployees().map(e => [e.id, e.fname, e.lname, e.email, e.contact, e.address, e.position, e.dept, e.status, e.start_date]);
-    const csv = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const rows = getAllEmployees().map(e => [
+        e.id, e.fname, e.lname, e.email, e.contact,
+        e.address, e.position, e.dept, e.status, e.start_date,
+    ]);
+    const csv = [headers, ...rows]
+        .map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = `EduRecords_${getToday()}.csv`; a.click();
+    a.download = `EduRecords_${getToday()}.csv`;
+    a.click();
     showToast('CSV exported.', 'success');
 }
+
 function exportToPDF() {
     const rows = getAllEmployees().map(e =>
         `<tr><td>${e.fname} ${e.lname}</td><td>${e.email}</td><td>${e.position}</td><td>${e.dept ?? '—'}</td><td>${e.status}</td><td>${e.start_date ?? '—'}</td></tr>`

@@ -1,5 +1,6 @@
 let toastTimer = null;
-function showToast(message, type = 'info') {
+
+export function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
     if (!toast) return;
     toast.textContent = message;
