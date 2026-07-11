@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSC - ERMS</title>
+    <link rel="stylesheet" href="./src/style.css" />
+</head>
+
+<body>
+    <!-- ── LOGIN ──────────────────────────────────────────────────── -->
+    <div id="login-screen">
+        <div class="login-box">
+            <div class="login-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            </div>
+            <h1>EduRecords</h1>
+            <p>College HR Management System</p>
+            <div class="login-field">
+                <label>Username</label>
+                <input type="text" id="login-user" placeholder="Enter username"
+                    onkeydown="if(event.key==='Enter') handleLogin()" />
+            </div>
+            <div class="login-field">
+                <label>Password</label>
+                <input type="password" id="login-pass" placeholder="Enter password"
+                    onkeydown="if(event.key==='Enter') handleLogin()" />
+            </div>
+            <div class="login-err" id="login-err"></div>
+            <button class="login-btn" onclick="handleLogin()">Sign In</button>
+            <div class="login-footer">EduRecords v1.0.0 &middot; Local Access Only</div>
+        </div>
+    </div>
+
+    <!-- ── APP SHELL ──────────────────────────────────────────────── -->
+    <div id="app" style="display:none;">
+
+        <aside id="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>EduRecords</h1>
+                    <p>College HR</p>
+                </div>
+            </div>
+
+            <nav id="sidebar-nav">
+                <div class="nav-section-label">Records</div>
+                <a data-page="employees" class="active" onclick="navTo('employees',this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    Employees
+                    <span class="nav-badge" id="emp-count-badge">7</span>
+                </a>
+                <a data-page="departments" onclick="navTo('departments',this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Departments
+                </a>
+                <div class="nav-section-label" style="margin-top:8px;">Tools</div>
+                <a data-page="backup" onclick="navTo('backup',this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    Backup &amp; Restore
+                </a>
+                <a data-page="export" onclick="navTo('export',this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Export
+                </a>
+                <div class="nav-section-label" style="margin-top:8px;">System</div>
+                <a data-page="settings" onclick="navTo('settings',this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="su-avatar" id="su-avatar">AD</div>
+                <div class="su-info">
+                    <div class="su-name" id="su-name">Admin</div>
+                    <div class="su-role" id="su-role">HR Administrator</div>
+                </div>
+                <button class="su-logout" title="Logout" onclick="handleLogout()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <div id="main">
+            <div id="topbar">
+                <h2 id="page-title">Employees</h2>
+                <div class="search-wrap" id="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search employees…"
+                        oninput="handleSearch(this.value)" />
+                </div>
+            </div>
+
+            <div id="content">
+
+                <!-- Employees Page -->
+                <div id="page-employees" class="page active">
+                    <div class="toolbar">
+                        <button class="btn btn-primary" onclick="openEmployeeModal()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            Add Employee
+                        </button>
+                        <select id="filter-dept" onchange="renderEmployeeTable(App.searchQuery)">
+                            <option value="">All Departments</option>
+                        </select>
+                        <select id="filter-status" onchange="renderEmployeeTable(App.searchQuery)">
+                            <option value="">All Status</option>
+                            <option>Active</option>
+                            <option>Inactive</option>
+                            <option>On Leave</option>
+                        </select>
+                    </div>
+                    <div class="card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Employee</th>
+                                    <th>Contact</th>
+                                    <th>Position</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emp-tbody"></tbody>
+                        </table>
+                        <div id="emp-empty" class="empty" style="display:none;">No employees found.</div>
+                    </div>
+                </div>
+
+                <!-- Departments Page -->
+                <div id="page-departments" class="page">
+                    <div class="toolbar">
+                        <button class="btn btn-primary" onclick="openDeptModal()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            Add Department
+                        </button>
+                    </div>
+                    <div class="dept-grid" id="dept-grid"></div>
+                </div>
+
+                <!-- Backup Page -->
+                <div id="page-backup" class="page">
+                    <div class="backup-grid">
+                        <div class="backup-card">
+                            <h4>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)"
+                                    stroke-width="2">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                    <polyline points="17 21 17 13 7 13 7 21" />
+                                </svg>
+                                Create Backup
+                            </h4>
+                            <p>Save all records to a .json file you can restore any time.</p>
+                            <button class="btn btn-primary" onclick="handleCreateBackup()"
+                                style="width:100%;justify-content:center;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                </svg>
+                                Create Backup Now
+                            </button>
+                            <div class="bk-list" id="bk-list"></div>
+                        </div>
+                        <div class="backup-card">
+                            <h4>
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                </svg>
+                                Restore from Backup
+                            </h4>
+                            <p>Upload a previously saved .json backup file. <strong style="color:var(--error)">This will
+                                    overwrite all current records.</strong></p>
+                            <label for="restore-input" class="btn btn-primary"
+                                style="width:100%;justify-content:center;cursor:pointer;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                </svg>
+                                Select Backup File
+                            </label>
+                            <input type="file" id="restore-input" accept=".json" style="display:none"
+                                onchange="handleRestoreBackup(this)" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Page -->
+                <div id="page-export" class="page">
+                    <p style="font-size:13px;color:var(--text-2);margin-bottom:22px;">Export all employee records to
+                        your preferred format.</p>
+                    <div class="export-grid">
+                        <div class="export-card" onclick="exportToCSV()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#0d9373" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="8" y1="13" x2="16" y2="13" />
+                                <line x1="8" y1="17" x2="16" y2="17" />
+                            </svg>
+                            <h4>Export to CSV</h4>
+                            <p>Open in Excel or Google Sheets</p>
+                        </div>
+                        <div class="export-card" onclick="exportToPDF()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#c8253c" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <path d="M9 13h1a2 2 0 0 1 0 4H9v-4z" />
+                                <path d="M14 13h2" />
+                                <path d="M14 17h2" />
+                            </svg>
+                            <h4>Export to PDF</h4>
+                            <p>Print-ready report</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="page-settings" class="page">
+                    <div class="settings-wrap">
+                        <div class="settings-card">
+                            <h4>Appearance</h4>
+                            <div class="setting-row">
+                                <div class="sl">
+                                    <div class="sl-title">Dark Mode</div>
+                                    <div class="sl-desc">Switch to dark theme</div>
+                                </div>
+                                <div class="toggle" id="dark-toggle" onclick="handleToggleDark()">
+                                    <div class="knob"></div>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <div class="sl">
+                                    <div class="sl-title">Font Size</div>
+                                    <div class="sl-desc">Adjust text size across the app</div>
+                                </div>
+                                <div class="fs-btns">
+                                    <button class="fs-btn" onclick="handleSetFont(13,this)">S</button>
+                                    <button class="fs-btn active" onclick="handleSetFont(14,this)">M</button>
+                                    <button class="fs-btn" onclick="handleSetFont(15,this)">L</button>
+                                    <button class="fs-btn" onclick="handleSetFont(16,this)">XL</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <h4>User Accounts</h4>
+                            <table class="user-table" id="user-table"></table>
+                            <button class="btn btn-primary" style="margin-top:16px" onclick="openAddUserModal()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add User
+                            </button>
+                        </div>
+                        <div class="settings-card">
+                            <h4>System Info</h4>
+                            <div class="setting-row">
+                                <div class="sl">
+                                    <div class="sl-title">Version</div>
+                                </div>
+                                <span
+                                    style="font-size:12px;font-weight:700;color:var(--blue-700);font-family:'DM Mono',monospace;">v1.0.0</span>
+                            </div>
+                            <div class="setting-row">
+                                <div class="sl">
+                                    <div class="sl-title">Records</div>
+                                    <div class="sl-desc" id="db-stats">—</div>
+                                </div>
+                                <button class="btn btn-sm btn-edit" onclick="refreshStats()">Refresh</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /content -->
+        </div><!-- /main -->
+    </div><!-- /app -->
+
+    <!-- ── PROFILE PANEL ───────────────────────────────────────────── -->
+    <div id="panel-backdrop" onclick="closeProfilePanel()"></div>
+    <div id="panel">
+        <div class="panel-hdr" id="panel-header"></div>
+        <div class="panel-tabs">
+            <button class="tab-btn active" onclick="switchTab('info',this)">Personal Info</button>
+            <button class="tab-btn" onclick="switchTab('employment',this)">Employment</button>
+            <button class="tab-btn" onclick="switchTab('docs',this)">201 File</button>
+        </div>
+        <div class="panel-body">
+            <div id="tab-info" class="tab-pane active"></div>
+            <div id="tab-employment" class="tab-pane"></div>
+            <div id="tab-docs" class="tab-pane"></div>
+        </div>
+    </div>
+
+    <!-- ── EMPLOYEE MODAL ──────────────────────────────────────────── -->
+    <div id="emp-overlay" class="overlay">
+        <div class="modal" style="width:580px;">
+            <button class="modal-close" onclick="closeEmployeeModal()">×</button>
+            <h3 id="emp-modal-title">Add Employee</h3>
+            <div class="pic-wrap">
+                <div id="pic-preview" class="pic-ini">?</div>
+                <label class="pic-lbl" for="pic-input">Upload Photo</label>
+                <input type="file" id="pic-input" accept="image/*" style="display:none" onchange="previewPhoto(this)" />
+            </div>
+            <div class="form-grid">
+                <div class="fg"><label>First Name *</label><input id="f-fname" type="text" /></div>
+                <div class="fg"><label>Last Name *</label><input id="f-lname" type="text" /></div>
+                <div class="fg"><label>Email *</label><input id="f-email" type="email" /></div>
+                <div class="fg"><label>Contact</label><input id="f-contact" type="text" /></div>
+                <div class="fg full"><label>Address</label><textarea id="f-address"></textarea></div>
+                <div class="fg"><label>Position *</label><input id="f-position" type="text" /></div>
+                <div class="fg"><label>Department</label><select id="f-dept"></select></div>
+                <div class="fg"><label>Status</label>
+                    <select id="f-status">
+                        <option>Active</option>
+                        <option>Inactive</option>
+                        <option>On Leave</option>
+                    </select>
+                </div>
+                <div class="fg"><label>Start Date</label><input id="f-start" type="date" /></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeEmployeeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── DEPT MODAL ──────────────────────────────────────────────── -->
+    <div id="dept-overlay" class="overlay">
+        <div class="modal" style="width:400px;">
+            <button class="modal-close" onclick="closeDeptModal()">×</button>
+            <h3 id="dept-modal-title">Add Department</h3>
+            <div class="fg" style="margin-bottom:14px;"><label>Name *</label><input id="d-name" type="text" /></div>
+            <div class="fg"><label>Description</label><textarea id="d-desc"></textarea></div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeDeptModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveDept()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ADD USER MODAL ──────────────────────────────────────────── -->
+    <div id="user-overlay" class="overlay">
+        <div class="modal" style="width:400px;">
+            <button class="modal-close" onclick="closeAddUserModal()">×</button>
+            <h3>Add User Account</h3>
+            <div class="fg" style="margin-bottom:13px;"><label>Full Name *</label><input id="u-name" type="text"
+                    placeholder="e.g. Maria Santos" /></div>
+            <div class="fg" style="margin-bottom:13px;"><label>Username *</label><input id="u-user" type="text"
+                    placeholder="e.g. msantos" /></div>
+            <div class="fg" style="margin-bottom:13px;"><label>Password *</label><input id="u-pass" type="password"
+                    placeholder="Min. 4 characters" /></div>
+            <div class="fg"><label>Role</label>
+                <select id="u-role">
+                    <option>HR Administrator</option>
+                    <option>HR Staff</option>
+                    <option>Viewer</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeAddUserModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="handleSaveUser()">Create User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SCAN MODAL ──────────────────────────────────────────────── -->
+    <div id="scan-overlay" class="overlay">
+        <div class="modal" style="width:480px;">
+            <button class="modal-close" onclick="closeScanModal()">×</button>
+            <h3>Scan Document</h3>
+            <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;margin-top:-10px;">Detected devices:</p>
+            <div id="scan-dev-list"></div>
+            <div class="scan-opts">
+                <label>Color Mode<select id="sc-color">
+                        <option>Color</option>
+                        <option>Grayscale</option>
+                        <option>Black &amp; White</option>
+                    </select></label>
+                <label>Resolution<select id="sc-dpi">
+                        <option>150 DPI</option>
+                        <option selected>300 DPI</option>
+                        <option>600 DPI</option>
+                    </select></label>
+                <label>Doc Type<select id="sc-doctype">
+                        <option>Document</option>
+                        <option>Photo</option>
+                        <option>ID Card</option>
+                    </select></label>
+                <label>Format<select id="sc-format">
+                        <option>PDF</option>
+                        <option>JPEG</option>
+                        <option>PNG</option>
+                    </select></label>
+            </div>
+            <div class="scan-prog" id="scan-prog">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" stroke-width="1.5">
+                    <rect x="2" y="7" width="20" height="10" rx="2" />
+                    <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+                    <circle cx="12" cy="12" r="1" />
+                </svg>
+                <p id="scan-status" style="font-size:13px;color:var(--text-2);margin-top:10px;"></p>
+                <div class="scan-bar">
+                    <div class="scan-bar-fill" id="scan-fill"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeScanModal()">Cancel</button>
+                <button class="btn btn-primary" id="scan-btn" onclick="handleStartScan()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="10" rx="2" />
+                        <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    Start Scan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-area"></div>
+    <div id="toast"></div>
+</body>
+
+<script type="module" src="./src/main.js"></script>
+
+</html>
