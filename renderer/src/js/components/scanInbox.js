@@ -8,6 +8,7 @@ import { listDocumentTypes } from '../api/documents.js';
 import { ApiError } from '../api/client.js';
 import { getEl, setHTML, escapeHtml, formatFileSize } from '../utils/helpers.js';
 import { showToast } from '../utils/toast.js';
+import { canWrite } from '../utils/authz.js';
 
 let _pendingFileName = '';
 let _documentTypes = [];
@@ -63,8 +64,10 @@ export async function renderScanInboxPage() {
             </div>
           </div>
           <div class="bk-acts">
-            <button class="btn btn-sm btn-edit" data-assign-scan="${encodeURIComponent(f.name)}" ${f.tooLarge ? 'disabled' : ''}>Assign</button>
-            <button class="btn btn-sm btn-del" data-reject-scan="${encodeURIComponent(f.name)}">Reject</button>
+            ${canWrite()
+              ? `<button class="btn btn-sm btn-edit" data-assign-scan="${encodeURIComponent(f.name)}" ${f.tooLarge ? 'disabled' : ''}>Assign</button>
+            <button class="btn btn-sm btn-del" data-reject-scan="${encodeURIComponent(f.name)}">Reject</button>`
+              : '<span style="font-size:11px;color:var(--text-3);">View only</span>'}
           </div>
         </div>`,
         )

@@ -20,7 +20,6 @@ import {
 import { initEmployeeModal } from './js/components/employeeModal.js';
 import { initProfilePanel, closeProfilePanel } from './js/components/profilePanel.js';
 import { initDocuments } from './js/components/documents.js';
-import { initScanModal } from './js/components/scanModal.js';
 import { initScanInbox, renderScanInboxPage } from './js/components/scanInbox.js';
 import { initTrash, renderTrashPage } from './js/components/trash.js';
 import {
@@ -30,6 +29,7 @@ import {
 import { initBackup, renderBackupPage } from './js/components/backup.js';
 import { initSettings, renderSettingsPage } from './js/components/settings.js';
 import { initExport } from './js/components/export.js';
+import { setCurrentRole, clearCurrentRole } from './js/utils/authz.js';
 
 const App = {
   currentUser: null,
@@ -71,12 +71,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   initEmployeeModal(getSearchQuery);
   initProfilePanel(getSearchQuery);
   initDocuments();
-  initScanModal();
   initScanInbox();
   initTrash();
   initDepartmentComponent();
   initBackup();
-  initSettings(() => App.prefs, () => App.savePrefs());
+  initSettings(
+    () => App.prefs,
+    () => App.savePrefs(),
+    () => App.currentUser,
+  );
   initExport();
 
   wireNavigation();
@@ -101,6 +104,7 @@ async function restoreSession() {
 
 function showLoginOnly() {
   hideSetupWizard();
+  clearCurrentRole();
   getEl('pw-overlay')?.classList.remove('open');
   getEl('app').style.display = 'none';
   getEl('login-screen').style.display = 'flex';
@@ -108,6 +112,7 @@ function showLoginOnly() {
 
 function enterAuthenticated(user, setupStatus) {
   App.currentUser = user;
+  setCurrentRole(user.roleCode);
   getEl('login-screen').style.display = 'none';
 
   if (user.mustChangePassword) {
@@ -138,6 +143,7 @@ function enterAuthenticated(user, setupStatus) {
 
 async function showAppShell(user) {
   hideSetupWizard();
+  setCurrentRole(user?.roleCode);
   getEl('login-screen').style.display = 'none';
   getEl('app').style.display = 'flex';
   getEl('su-name').textContent = user.name;
@@ -170,7 +176,10 @@ function handleLogin(user) {
 }
 
 function afterPasswordChanged() {
-  if (App.currentUser) App.currentUser.mustChangePassword = false;
+  if (App.currentUser) {
+    App.currentUser.mustChangePassword = false;
+    setCurrentRole(App.currentUser.roleCode);
+  }
   checkSetupNeeded()
     .then((status) => {
       App.setupCompleted = Boolean(status.setupCompleted);
@@ -251,6 +260,7 @@ async function handleLogout() {
     await apiLogout();
   } catch { /* clear local anyway */ }
   App.currentUser = null;
+  clearCurrentRole();
   closeProfilePanel();
   hideSetupWizard();
   getEl('pw-overlay')?.classList.remove('open');

@@ -10,6 +10,7 @@ import {
   absoluteFromRelative,
   writeEmployeePhoto,
 } from '../services/files.js';
+import { writeAudit, clientIp } from '../services/audit.js';
 
 export const employeesRouter = Router();
 
@@ -232,6 +233,15 @@ employeesRouter.post('/', writeRoles, async (req, res, next) => {
       }
     });
 
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'employee.create',
+      entityType: 'employee',
+      entityId: employee,
+      meta: { firstName, lastName, email },
+      ip: clientIp(req),
+    });
+
     const row = await getEmployeeRow(employee);
     res.status(201).json({ employee: mapEmployee(row) });
   } catch (err) {
@@ -343,6 +353,15 @@ employeesRouter.patch('/:id', writeRoles, async (req, res, next) => {
       }
     });
 
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'employee.update',
+      entityType: 'employee',
+      entityId: req.params.id,
+      meta: { firstName, lastName, email },
+      ip: clientIp(req),
+    });
+
     const row = await getEmployeeRow(req.params.id);
     res.json({ employee: mapEmployee(row) });
   } catch (err) {
@@ -370,6 +389,14 @@ employeesRouter.delete('/:id', writeRoles, async (req, res, next) => {
        WHERE employee_id = $1 AND is_active = TRUE`,
       [req.params.id],
     );
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'employee.delete',
+      entityType: 'employee',
+      entityId: req.params.id,
+      ip: clientIp(req),
+    });
 
     res.json({ ok: true });
   } catch (err) {
@@ -417,6 +444,14 @@ employeesRouter.post('/:id/photo', writeRoles, async (req, res, next) => {
            RETURNING id, profile_picture_path`,
           [req.params.id, saved.relativePath, req.session.userId],
         );
+
+        await writeAudit({
+          actorUserId: req.session.userId,
+          action: 'employee.photo_upload',
+          entityType: 'employee',
+          entityId: req.params.id,
+          ip: clientIp(req),
+        });
 
         res.json({
           employeeId: rows[0].id,

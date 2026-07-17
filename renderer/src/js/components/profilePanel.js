@@ -5,6 +5,7 @@ import { showToast } from '../utils/toast.js';
 import { renderEmployeeTable } from './employeeTable.js';
 import { openEmployeeModal } from './employeeModal.js';
 import { renderTabDocs } from './documents.js';
+import { canWrite } from '../utils/authz.js';
 
 let _panelEmpId = null;
 let _getSearchQuery = () => '';
@@ -114,17 +115,17 @@ function renderPanelHeader(emp) {
       ${a?.startDate ? `<span class="ph-badge">Since ${escapeHtml(String(a.startDate).slice(0, 10))}</span>` : ''}
     </div>
     <div class="ph-actions">
-      <button class="phbtn phbtn-edit" id="panel-edit-btn">Edit</button>
-      <button class="phbtn phbtn-del" id="panel-delete-btn">Delete</button>
+      ${canWrite() ? `<button class="phbtn phbtn-edit" id="panel-edit-btn">Edit</button>
+      <button class="phbtn phbtn-del" id="panel-delete-btn">Delete</button>` : ''}
     </div>`,
   );
 
   document.getElementById('panel-close-btn').addEventListener('click', closeProfilePanel);
-  document.getElementById('panel-edit-btn').addEventListener('click', () => {
+  document.getElementById('panel-edit-btn')?.addEventListener('click', () => {
     openEmployeeModal(emp.id);
     closeProfilePanel();
   });
-  document.getElementById('panel-delete-btn').addEventListener('click', () => {
+  document.getElementById('panel-delete-btn')?.addEventListener('click', () => {
     handleDeleteEmployee(emp.id);
   });
 }

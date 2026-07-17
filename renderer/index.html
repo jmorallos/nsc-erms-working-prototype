@@ -177,7 +177,7 @@
                 <!-- Employees Page -->
                 <div id="page-employees" class="page active">
                     <div class="toolbar">
-                        <button id="add-emp-btn" class="btn btn-primary" >
+                        <button id="add-emp-btn" class="btn btn-primary needs-write" >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -216,7 +216,7 @@
                 <!-- Departments Page -->
                 <div id="page-departments" class="page">
                     <div class="toolbar">
-                        <button id="add-dept-btn" class="btn btn-primary" type="button">
+                        <button id="add-dept-btn" class="btn btn-primary needs-write" type="button">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -272,7 +272,7 @@
                                 Create Backup
                             </h4>
                             <p>Save all records to a .json file you can restore any time.</p>
-                            <button id="create-backup-btn" class="btn btn-primary"
+                            <button id="create-backup-btn" class="btn btn-primary needs-write"
                                 style="width:100%;justify-content:center;">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -294,7 +294,7 @@
                             </h4>
                             <p>Upload a previously saved .json backup file. <strong style="color:var(--error)">This will
                                     overwrite all current records.</strong></p>
-                            <label for="restore-input" class="btn btn-primary"
+                            <label for="restore-input" class="btn btn-primary needs-write"
                                 style="width:100%;justify-content:center;cursor:pointer;">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -364,7 +364,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="settings-card">
+                        <div class="settings-card needs-admin">
                             <h4>User Accounts</h4>
                             <table class="user-table" id="user-table"></table>
                             <button id="add-user-btn" class="btn btn-primary" style="margin-top:16px">
@@ -423,7 +423,7 @@
             <h3 id="emp-modal-title">Add Employee</h3>
             <div class="pic-wrap">
                 <div id="pic-preview" class="pic-ini">?</div>
-                <label class="pic-lbl" for="pic-input">Upload Photo</label>
+                <label class="pic-lbl needs-write" for="pic-input">Upload Photo</label>
                 <input type="file" id="pic-input" accept="image/*" style="display:none"  />
             </div>
             <div class="form-grid">
@@ -447,11 +447,22 @@
 
     <!-- ── DEPT MODAL ──────────────────────────────────────────────── -->
     <div id="dept-overlay" class="overlay">
-        <div class="modal" style="width:400px;">
+        <div class="modal" style="width:520px;">
             <button id="close-dept-modal" class="modal-close">×</button>
             <h3 id="dept-modal-title">Add Department</h3>
             <div class="fg" style="margin-bottom:14px;"><label>Name *</label><input id="d-name" type="text" /></div>
-            <div class="fg"><label>Description</label><textarea id="d-desc"></textarea></div>
+            <div class="fg" style="margin-bottom:14px;"><label>Description</label><textarea id="d-desc"></textarea></div>
+            <div class="fg" style="margin-bottom:8px;">
+                <label>Positions for this department</label>
+                <p style="font-size:11px;color:var(--text-3);margin:4px 0 8px;">
+                    Check positions staff can hold here. Create a new catalog position below if it’s missing.
+                </p>
+                <div id="d-pos-list" class="dept-pos-checklist"></div>
+            </div>
+            <div class="dept-pos-add">
+                <input id="d-pos-new" type="text" placeholder="New position name…" />
+                <button type="button" id="d-pos-add-btn" class="btn btn-sm btn-edit">Add position</button>
+            </div>
             <div class="modal-actions">
                 <button id="dept-modal-cancel" class="btn btn-cancel">Cancel</button>
                 <button id="dept-modal-save" class="btn btn-primary">Save</button>
@@ -469,70 +480,17 @@
             <div class="fg" style="margin-bottom:13px;"><label>Username *</label><input id="u-user" type="text"
                     placeholder="e.g. msantos" /></div>
             <div class="fg" style="margin-bottom:13px;"><label>Password *</label><input id="u-pass" type="password"
-                    placeholder="Min. 4 characters" /></div>
+                    placeholder="Min. 8 characters" /></div>
             <div class="fg"><label>Role</label>
                 <select id="u-role">
-                    <option>HR Administrator</option>
-                    <option>HR Staff</option>
-                    <option>Viewer</option>
+                    <option value="staff">Staff</option>
+                    <option value="viewer">Viewer</option>
+                    <option value="admin">Administrator</option>
                 </select>
             </div>
             <div class="modal-actions">
                 <button id="user-modal-cancel" class="btn btn-cancel">Cancel</button>
                 <button id="user-modal-save" class="btn btn-primary">Create User</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── SCAN MODAL ──────────────────────────────────────────────── -->
-    <div id="scan-overlay" class="overlay">
-        <div class="modal" style="width:480px;">
-            <button id="scan-close-btn" class="modal-close">×</button>
-            <h3>Scan Document</h3>
-            <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;margin-top:-10px;">Detected devices:</p>
-            <div id="scan-dev-list"></div>
-            <div class="scan-opts">
-                <label>Color Mode<select id="sc-color">
-                        <option>Color</option>
-                        <option>Grayscale</option>
-                        <option>Black &amp; White</option>
-                    </select></label>
-                <label>Resolution<select id="sc-dpi">
-                        <option>150 DPI</option>
-                        <option selected>300 DPI</option>
-                        <option>600 DPI</option>
-                    </select></label>
-                <label>Doc Type<select id="sc-doctype">
-                        <option>Document</option>
-                        <option>Photo</option>
-                        <option>ID Card</option>
-                    </select></label>
-                <label>Format<select id="sc-format">
-                        <option>PDF</option>
-                        <option>JPEG</option>
-                        <option>PNG</option>
-                    </select></label>
-            </div>
-            <div class="scan-prog" id="scan-prog">
-                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" stroke-width="1.5">
-                    <rect x="2" y="7" width="20" height="10" rx="2" />
-                    <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
-                    <circle cx="12" cy="12" r="1" />
-                </svg>
-                <p id="scan-status" style="font-size:13px;color:var(--text-2);margin-top:10px;"></p>
-                <div class="scan-bar">
-                    <div class="scan-bar-fill" id="scan-fill"></div>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button id="close-scan-modal" class="btn btn-cancel">Cancel</button>
-                <button class="btn btn-primary" id="scan-btn">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="10" rx="2" />
-                        <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
-                    </svg>
-                    Start Scan
-                </button>
             </div>
         </div>
     </div>

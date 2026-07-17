@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { query } from '../db/pool.js';
 import { requireAuth } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
+import { writeAudit, clientIp } from '../services/audit.js';
 
 export const authRouter = Router();
 
@@ -58,6 +59,15 @@ authRouter.post('/login', async (req, res, next) => {
     await query('UPDATE users SET last_login = NOW(), updated_at = NOW() WHERE id = $1', [
       user.id,
     ]);
+
+    await writeAudit({
+      actorUserId: user.id,
+      action: 'auth.login',
+      entityType: 'user',
+      entityId: user.id,
+      meta: { username: user.username },
+      ip: clientIp(req),
+    });
 
     res.json({ user: publicUser(user) });
   } catch (err) {
@@ -115,6 +125,14 @@ authRouter.post('/change-password', requireAuth, async (req, res, next) => {
        WHERE id = $2`,
       [hash, user.id],
     );
+
+    await writeAudit({
+      actorUserId: user.id,
+      action: 'auth.change_password',
+      entityType: 'user',
+      entityId: user.id,
+      ip: clientIp(req),
+    });
 
     res.json({ ok: true });
   } catch (err) {

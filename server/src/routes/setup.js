@@ -5,6 +5,7 @@ import { query } from '../db/pool.js';
 import { config } from '../config.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
+import { writeAudit, clientIp } from '../services/audit.js';
 
 export const setupRouter = Router();
 
@@ -16,9 +17,13 @@ async function getSetting(key) {
   return rows[0]?.value;
 }
 
+function isSetupCompletedValue(value) {
+  return value === true || value === 'true' || value === 1;
+}
+
 setupRouter.get('/status', async (_req, res, next) => {
   try {
-    const setupCompleted = (await getSetting('setup_completed')) === true;
+    const setupCompleted = isSetupCompletedValue(await getSetting('setup_completed'));
     const { rows } = await query(
       `SELECT COUNT(*)::int AS count
        FROM users u
@@ -44,7 +49,7 @@ setupRouter.post(
   requireRole('superadmin'),
   async (req, res, next) => {
     try {
-      const setupCompleted = (await getSetting('setup_completed')) === true;
+      const setupCompleted = isSetupCompletedValue(await getSetting('setup_completed'));
       if (setupCompleted) {
         throw new HttpError(400, 'Setup already completed', 'SETUP_DONE');
       }
@@ -101,6 +106,15 @@ setupRouter.post(
           [key, JSON.stringify(value)],
         );
       }
+
+      await writeAudit({
+        actorUserId: req.session.userId,
+        action: 'setup.complete',
+        entityType: 'app_settings',
+        entityId: 'setup_completed',
+        meta: { orgName, filesRoot, scanInboxPath, maxUploadBytes },
+        ip: clientIp(req),
+      });
 
       res.json({
         ok: true,

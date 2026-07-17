@@ -11,6 +11,7 @@ import {
   writeEmployeeDocument,
   removeStoredFile,
 } from '../services/files.js';
+import { writeAudit, clientIp } from '../services/audit.js';
 
 export const documentsRouter = Router({ mergeParams: true });
 
@@ -220,6 +221,20 @@ documentsRouter.post('/', writeRoles, async (req, res, next) => {
           [rows[0].id],
         );
 
+        await writeAudit({
+          actorUserId: req.session.userId,
+          action: 'document.upload',
+          entityType: 'document',
+          entityId: documentId,
+          meta: {
+            employeeId,
+            documentTypeId,
+            versionNumber,
+            fileName: displayName,
+          },
+          ip: clientIp(req),
+        });
+
         res.status(201).json({ document: mapDoc(joined[0]) });
       } catch (e) {
         next(e);
@@ -294,6 +309,16 @@ documentItemRouter.delete('/:id', writeRoles, async (req, res, next) => {
       [req.params.id, req.session.userId],
     );
     if (!rows[0]) throw new HttpError(404, 'Document not found', 'NOT_FOUND');
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'document.soft_delete',
+      entityType: 'document',
+      entityId: rows[0].id,
+      meta: { fileName: rows[0].file_name },
+      ip: clientIp(req),
+    });
+
     res.json({
       ok: true,
       id: rows[0].id,
@@ -315,6 +340,16 @@ documentItemRouter.post('/:id/restore', writeRoles, async (req, res, next) => {
       [req.params.id, req.session.userId],
     );
     if (!rows[0]) throw new HttpError(404, 'Trashed document not found', 'NOT_FOUND');
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'document.restore',
+      entityType: 'document',
+      entityId: rows[0].id,
+      meta: { employeeId: rows[0].employee_id, fileName: rows[0].file_name },
+      ip: clientIp(req),
+    });
+
     res.json({
       ok: true,
       id: rows[0].id,
@@ -345,6 +380,16 @@ documentItemRouter.delete('/:id/permanent', writeRoles, async (req, res, next) =
     }
 
     await query(`DELETE FROM documents WHERE id = $1`, [req.params.id]);
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'document.permanent_delete',
+      entityType: 'document',
+      entityId: req.params.id,
+      meta: { fileRemoved },
+      ip: clientIp(req),
+    });
+
     res.json({ ok: true, fileRemoved });
   } catch (err) {
     next(err);

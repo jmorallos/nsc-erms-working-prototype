@@ -7,6 +7,7 @@ import {
 import { ApiError } from '../api/client.js';
 import { getEl, setHTML, escapeHtml, formatFileSize } from '../utils/helpers.js';
 import { showToast } from '../utils/toast.js';
+import { canWrite } from '../utils/authz.js';
 
 export function initTrash() {
   getEl('trash-refresh')?.addEventListener('click', () => {
@@ -59,8 +60,10 @@ export async function renderTrashPage() {
           </div>
           <div class="bk-acts">
             <button class="btn btn-sm btn-edit" data-trash-download="${doc.id}">Download</button>
-            <button class="btn btn-sm btn-edit" data-trash-restore="${doc.id}">Restore</button>
-            <button class="btn btn-sm btn-del" data-trash-purge="${doc.id}">Delete forever</button>
+            ${canWrite()
+              ? `<button class="btn btn-sm btn-edit" data-trash-restore="${doc.id}">Restore</button>
+            <button class="btn btn-sm btn-del" data-trash-purge="${doc.id}">Delete forever</button>`
+              : ''}
           </div>
         </div>`;
         })

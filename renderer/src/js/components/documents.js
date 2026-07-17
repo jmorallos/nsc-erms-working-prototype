@@ -9,6 +9,7 @@ import {
 import { getEl, setHTML, escapeHtml, formatFileSize } from '../utils/helpers.js';
 import { showToast } from '../utils/toast.js';
 import { refreshPanelHeader } from './profilePanel.js';
+import { canWrite } from '../utils/authz.js';
 
 let _emp = null;
 let _documentTypes = [];
@@ -56,7 +57,9 @@ export async function renderTabDocs(emp) {
               .map((c) =>
                 c.satisfied
                   ? `<span class="ph-badge" style="background:rgba(13,147,115,.12);color:var(--success)">${escapeHtml(c.name)} ✓</span>`
-                  : `<button type="button" class="ph-badge doc-rec-chip" data-rec-type="${c.id}" style="background:rgba(46,111,255,.1);color:var(--blue-700);border:none;cursor:pointer;">${escapeHtml(c.name)} · recommended</button>`,
+                  : canWrite()
+                    ? `<button type="button" class="ph-badge doc-rec-chip" data-rec-type="${c.id}" style="background:rgba(46,111,255,.1);color:var(--blue-700);border:none;cursor:pointer;">${escapeHtml(c.name)} · recommended</button>`
+                    : `<span class="ph-badge" style="background:rgba(46,111,255,.1);color:var(--blue-700);">${escapeHtml(c.name)} · recommended</span>`,
               )
               .join('')}
           </div>
@@ -67,20 +70,24 @@ export async function renderTabDocs(emp) {
       ? documents.map((doc) => buildDocRow(doc)).join('')
       : '<div class="empty" style="padding:20px 0">No documents on file yet.</div>';
 
+    const uploadToolbar = canWrite()
+      ? `<div class="file-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+        <button type="button" class="fab fab-upload" id="doc-open-upload">Upload document</button>
+      </div>`
+      : '';
+
     setHTML(
       'tab-docs',
       `
       ${checklistHtml}
-      <div class="file-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-        <button type="button" class="fab fab-upload" id="doc-open-upload">Upload document</button>
-      </div>
+      ${uploadToolbar}
       <p style="font-size:12px;color:var(--text-3);margin-bottom:12px;">
         ${documents.length} file(s) · sorted by most recent · multiple versions allowed per type
       </p>
       <div class="doc-list">${docsHtml}</div>`,
     );
 
-    getEl('doc-open-upload').addEventListener('click', () => openUploadModal());
+    getEl('doc-open-upload')?.addEventListener('click', () => openUploadModal());
 
     document.querySelectorAll('[data-rec-type]').forEach((btn) => {
       btn.addEventListener('click', () => openUploadModal(btn.dataset.recType));
@@ -250,7 +257,7 @@ function buildDocRow(doc) {
       </div>
       <div class="doc-acts">
         <button class="dbtn dbtn-print" data-download-doc="${doc.id}">Download</button>
-        <button class="dbtn dbtn-del" data-delete-doc="${doc.id}">Remove</button>
+        ${canWrite() ? `<button class="dbtn dbtn-del" data-delete-doc="${doc.id}">Remove</button>` : ''}
       </div>
     </div>`;
 }

@@ -9,6 +9,7 @@ import {
   claimInboxFileForEmployee,
   ensureInboxDirs,
 } from '../services/scanInbox.js';
+import { writeAudit, clientIp } from '../services/audit.js';
 
 export const scanInboxRouter = Router();
 
@@ -31,6 +32,16 @@ scanInboxRouter.post('/:fileName/reject', writeRoles, async (req, res, next) => 
     const fileName = decodeURIComponent(req.params.fileName);
     const reason = String(req.body?.reason || 'Rejected by user').trim();
     await rejectInboxFile(fileName, reason);
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'scan.reject',
+      entityType: 'scan_inbox',
+      entityId: fileName,
+      meta: { reason },
+      ip: clientIp(req),
+    });
+
     res.json({ ok: true });
   } catch (err) {
     if (err.code === 'NOT_FOUND') {
@@ -137,6 +148,15 @@ scanInboxRouter.post('/:fileName/assign', writeRoles, async (req, res, next) => 
         req.session.userId,
       ],
     );
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'scan.assign',
+      entityType: 'document',
+      entityId: rows[0].id,
+      meta: { employeeId, documentTypeId, sourceFile: fileName, versionNumber },
+      ip: clientIp(req),
+    });
 
     res.status(201).json({
       documentId: rows[0].id,
