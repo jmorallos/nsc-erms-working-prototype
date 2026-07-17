@@ -124,19 +124,21 @@ body {
 .brand-icon {
     width: 36px;
     height: 36px;
-    background: linear-gradient(135deg, var(--blue-900), var(--cyan-500));
-    border-radius: 10px;
+    background: #fff;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 180, 216, .35);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
 }
 
-.brand-icon svg {
-    width: 19px;
-    height: 19px;
-    stroke: #fff;
+.brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .brand-text h1 {
@@ -1972,21 +1974,19 @@ body.dark .login-box {
 }
 
 .login-logo {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, var(--blue-900), var(--cyan-500));
-    border-radius: 18px;
+    width: 72px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 18px;
-    box-shadow: 0 4px 18px rgba(0, 180, 216, .45);
 }
 
-.login-logo svg {
-    width: 32px;
-    height: 32px;
-    stroke: #fff;
+.login-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
 }
 
 .login-box h1 {
