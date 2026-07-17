@@ -46,6 +46,9 @@ export const config = {
   tlsKeyPath: process.env.TLS_KEY_PATH || '',
   allowHttpDev,
   filesRoot: process.env.FILES_ROOT || path.join(projectRoot, 'storage'),
+  backupsRoot:
+    process.env.BACKUPS_ROOT || path.join(projectRoot, 'backups'),
+  pgDumpPath: process.env.PG_DUMP_PATH || '',
   scanInboxPath: process.env.SCAN_INBOX_PATH || '',
   maxUploadBytes: Number(process.env.MAX_UPLOAD_BYTES || 31457280),
   clientDist: path.resolve(projectRoot, 'renderer'),

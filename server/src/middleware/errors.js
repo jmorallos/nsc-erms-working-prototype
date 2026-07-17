@@ -22,7 +22,10 @@ export function errorHandler(err, req, res, _next) {
   res.status(status).json({
     error: {
       code,
-      message: status >= 500 ? 'Internal server error' : err.message,
+      message:
+        status >= 500 && !['MISSING_TOOL', 'COMMAND_FAILED'].includes(code)
+          ? 'Internal server error'
+          : err.message,
     },
   });
 }

@@ -15,3 +15,5 @@ renderer/dist/
 client/dist/
 server/dist/
 coverage/
+backups/
+.work-*/

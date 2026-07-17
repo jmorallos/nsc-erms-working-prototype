@@ -4,30 +4,31 @@ Northern Samar Colleges — Employee Records Management System.
 
 **Stack:** Vanilla JS SPA (`renderer/`) · Node.js + Express (`server/`) · PostgreSQL (`db/migrations/`)
 
-## Phase 0 (current)
+## Current status
 
-- Postgres schema from the improved Electron mock model (ULIDs, assignments, document types, roles)
-- Migrations + seed (lookups + superadmin)
-- API: health, setup status/complete, auth (login / logout / me / change-password)
-- Session cookies via `connect-pg-simple`
-- HTTPS-ready (cert paths in `.env`); HTTP allowed in local dev
+Working end-to-end for registrar workflows:
+
+- Auth (login / logout / sessions / change-password) + first-run setup wizard
+- Employees, departments, positions (catalog + per-department links)
+- 201 File documents (upload, versioning, trash, restore)
+- Scan Inbox (assign / reject drop-folder scans)
+- Users + RBAC (superadmin / admin / staff / viewer)
+- Audit log **writes** on sensitive actions
+- **Backups:** `pg_dump` + `FILES_ROOT` zip (admin/superadmin)
 
 ## Prerequisites
 
 - Node.js 20+
-- PostgreSQL 14+ on the LAN host
-- (Production) TLS certificate for the LAN hostname
+- PostgreSQL 14+ (server + **client tools** so `pg_dump` is on PATH)
+- (Production LAN) TLS certificate for the host name
 
 ## Quick start (development)
 
 ```bash
-# 1. Create database (psql)
-CREATE USER nsc_erms WITH PASSWORD 'change_me';
-CREATE DATABASE nsc_erms OWNER nsc_erms;
-
+# 1. Create database (psql) — or: npm run db:create
 # 2. Configure env
 copy .env.example .env
-# edit DATABASE_URL, SESSION_SECRET, FILES_ROOT, SEED_SUPERADMIN_*
+# edit DB_*, SESSION_SECRET, FILES_ROOT, SEED_SUPERADMIN_*
 
 # 3. Install
 npm install
@@ -35,11 +36,14 @@ npm install
 # 4. Migrate + seed
 npm run db:setup
 
-# 5. Run API
+# 5. Run API (http://localhost:3443)
 npm run dev:server
+
+# 6. Run SPA (proxies /api → API)
+npm run dev:client
 ```
 
-Health check: `http://localhost:3443/api/v1/health`
+Health: `http://localhost:3443/api/v1/health`
 
 ### Seeded superadmin
 
@@ -47,65 +51,54 @@ Defaults (override in `.env`):
 
 - Username: `superadmin`
 - Password: `ChangeMeNow!`
-- `must_change_password = true` — call `POST /api/v1/auth/change-password` after login
+- Must change password on first login
 
-### First-run setup
+## Backups
 
-1. `GET /api/v1/setup/status` → `{ setupCompleted: false, hasSuperadmin: true }`
-2. `POST /api/v1/auth/login` with superadmin credentials
-3. `POST /api/v1/auth/change-password`
-4. `POST /api/v1/setup/complete` with body:
+Admin/superadmin → **Backup** page:
 
-```json
-{
-  "orgName": "Northern Samar Colleges",
-  "filesRoot": "C:\\nsc-erms-files",
-  "scanInboxPath": "C:\\nsc-erms-files\\inbox",
-  "maxUploadBytes": 31457280
-}
-```
+1. **Create** runs `pg_dump` and copies `FILES_ROOT`, then zips both under `BACKUPS_ROOT` (default: `./backups`).
+2. **Download** / **Delete** from the list.
+3. **Restore** is an ops procedure (not in-app). Each zip includes `README.txt`, `database.sql`, and `files/`.
 
-## API (Phase 0)
+Requirements:
 
-| Method | Path | Auth |
-|--------|------|------|
-| GET | `/api/v1/health` | public |
-| GET | `/api/v1/setup/status` | public |
-| POST | `/api/v1/setup/complete` | superadmin session |
-| POST | `/api/v1/auth/login` | public |
-| POST | `/api/v1/auth/logout` | session |
-| GET | `/api/v1/auth/me` | session |
-| POST | `/api/v1/auth/change-password` | session |
-
-## Schema highlights
-
-Preserves mock ULIDs for departments, positions, department_positions, employment types/statuses, and document types.
-
-Improvements over the mock JS file:
-
-- `password_hash`, role `code`, `must_change_password`
-- Roles: superadmin, admin, staff, viewer
-- `employees` ↔ `employee_assignments` (dept+position junction)
-- Documents: disk path, `source` (`upload` \| `scan_folder`), 30 MB cap
-- `app_settings`, `audit_logs`, soft-delete columns
-- Audit FKs use `users.id` (not usernames)
-- Selective `document_types.is_required`
+- `pg_dump` available (PostgreSQL bin folder on PATH), or set `PG_DUMP_PATH`
+- `tar` available (Windows 10+ includes it) for creating the zip
 
 ## LAN HTTPS
 
-Set in `.env`:
+1. Create a local CA + cert (recommended: [mkcert](https://github.com/FiloSottile/mkcert)):
+
+```bash
+mkcert -install
+mkcert erms.local 192.168.x.x localhost
+```
+
+2. Set in `.env`:
 
 ```
-TLS_CERT_PATH=C:\certs\erms.crt
-TLS_KEY_PATH=C:\certs\erms.key
+TLS_CERT_PATH=C:\certs\erms.local+2.pem
+TLS_KEY_PATH=C:\certs\erms.local+2-key.pem
 ALLOW_HTTP_DEV=false
+NODE_ENV=production
 ```
 
-Install the CA on staff PCs (e.g. mkcert) so browsers trust the LAN cert.
+3. Restart the API — it listens on `https://…:3443`. Session cookies become `Secure` when TLS is enabled.
+
+4. Install/trust the mkcert CA on staff PCs so browsers accept the LAN cert.
+
+## Roles
+
+| Role | Write records | Manage users / backups |
+|------|---------------|------------------------|
+| viewer | no | no |
+| staff | yes | no |
+| admin | yes | yes (not superadmin accounts) |
+| superadmin | yes | yes + setup |
 
 ## Next phases
 
-1. Wire SPA login to `/api/v1/auth`
-2. Employees / departments / assignments CRUD
-3. Document upload + scan-inbox assign
-4. RBAC on all routes + audit log writes
+1. Pagination for large employee lists
+2. Audit log viewer (read API + Settings page)
+3. Production Vite `dist` packaging / optional Electron shell

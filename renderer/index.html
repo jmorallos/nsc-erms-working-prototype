@@ -262,7 +262,7 @@
                 <!-- Backup Page -->
                 <div id="page-backup" class="page">
                     <div class="backup-grid">
-                        <div class="backup-card">
+                        <div class="backup-card needs-admin">
                             <h4>
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)"
                                     stroke-width="2">
@@ -271,15 +271,20 @@
                                 </svg>
                                 Create Backup
                             </h4>
-                            <p>Save all records to a .json file you can restore any time.</p>
-                            <button id="create-backup-btn" class="btn btn-primary needs-write"
-                                style="width:100%;justify-content:center;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                                </svg>
+                            <p>
+                                Snapshot PostgreSQL (<code>pg_dump</code>) and a copy of <code>FILES_ROOT</code>
+                                into a zip stored on the server.
+                            </p>
+                            <p style="font-size:11px;color:var(--text-3);margin:0 0 12px;font-family:'DM Mono',monospace;"
+                                id="backup-root-path">—</p>
+                            <button id="create-backup-btn" class="btn btn-primary"
+                                style="width:100%;justify-content:center;" type="button">
                                 Create Backup Now
                             </button>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+                                <h4 style="margin:0;font-size:13px;">Saved backups</h4>
+                                <button type="button" id="backup-refresh" class="btn btn-sm btn-edit">Refresh</button>
+                            </div>
                             <div class="bk-list" id="bk-list"></div>
                         </div>
                         <div class="backup-card">
@@ -290,20 +295,18 @@
                                     <polyline points="17 8 12 3 7 8" />
                                     <line x1="12" y1="3" x2="12" y2="15" />
                                 </svg>
-                                Restore from Backup
+                                Restore (ops)
                             </h4>
-                            <p>Upload a previously saved .json backup file. <strong style="color:var(--error)">This will
-                                    overwrite all current records.</strong></p>
-                            <label for="restore-input" class="btn btn-primary needs-write"
-                                style="width:100%;justify-content:center;cursor:pointer;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                </svg>
-                                Select Backup File
-                            </label>
-                            <input type="file" id="restore-input" accept=".json" style="display:none" />
+                            <p>
+                                In-app restore is disabled on purpose — restoring overwrites live data.
+                                Use a maintenance window and the steps in each archive’s <code>README.txt</code>:
+                            </p>
+                            <ol style="font-size:12px;color:var(--text-2);margin:0;padding-left:18px;line-height:1.6;">
+                                <li>Stop the NSC-ERMS API</li>
+                                <li>Restore <code>database.sql</code> with <code>psql</code></li>
+                                <li>Replace <code>FILES_ROOT</code> with the archive’s <code>files/</code> folder</li>
+                                <li>Start the API and verify login</li>
+                            </ol>
                         </div>
                     </div>
                 </div>
