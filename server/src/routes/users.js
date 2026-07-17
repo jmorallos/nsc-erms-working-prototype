@@ -228,3 +228,72 @@ usersRouter.patch('/:id', manageRoles, async (req, res, next) => {
     next(err);
   }
 });
+
+usersRouter.delete('/:id', manageRoles, async (req, res, next) => {
+  try {
+    const { rows: targetRows } = await query(`${USER_SELECT} WHERE u.id = $1`, [
+      req.params.id,
+    ]);
+    const target = targetRows[0];
+    if (!target) throw new HttpError(404, 'User not found', 'NOT_FOUND');
+
+    if (req.params.id === req.session.userId) {
+      throw new HttpError(400, 'You cannot delete your own account', 'VALIDATION');
+    }
+
+    if (target.is_active) {
+      throw new HttpError(
+        400,
+        'Deactivate the user first, then delete permanently',
+        'VALIDATION',
+      );
+    }
+
+    const actorRole = req.userRole;
+    if (target.role_code === 'superadmin' && actorRole !== 'superadmin') {
+      throw new HttpError(403, 'Only superadmin can delete superadmin accounts', 'FORBIDDEN');
+    }
+
+    if (target.role_code === 'superadmin') {
+      const { rows: countRows } = await query(
+        `SELECT COUNT(*)::int AS n
+         FROM users u
+         JOIN user_roles ur ON ur.id = u.role_id
+         WHERE ur.code = 'superadmin'`,
+      );
+      if (countRows[0].n <= 1) {
+        throw new HttpError(400, 'Cannot delete the last superadmin account', 'VALIDATION');
+      }
+    }
+
+    await writeAudit({
+      actorUserId: req.session.userId,
+      action: 'user.delete',
+      entityType: 'user',
+      entityId: req.params.id,
+      meta: {
+        username: target.username,
+        roleCode: target.role_code,
+        displayName: target.display_name,
+      },
+      ip: clientIp(req),
+    });
+
+    await query(`DELETE FROM users WHERE id = $1`, [req.params.id]);
+
+    // Drop any leftover sessions for that user
+    try {
+      await query(
+        `DELETE FROM session
+         WHERE (sess::jsonb ->> 'userId') = $1`,
+        [req.params.id],
+      );
+    } catch {
+      /* session cleanup best-effort */
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});

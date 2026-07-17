@@ -5,7 +5,7 @@ import { getAvatarHTML, getStatusBadge, getEl, escapeHtml } from '../utils/helpe
 import { openProfilePanel } from './profilePanel.js';
 import { showToast } from '../utils/toast.js';
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 12;
 let _page = 1;
 
 export function initEmployeeTable() {

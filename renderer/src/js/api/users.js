@@ -21,3 +21,7 @@ export function updateUser(id, payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function deleteUser(id) {
+  return api(`/users/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}

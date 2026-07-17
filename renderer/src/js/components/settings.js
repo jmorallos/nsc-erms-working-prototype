@@ -3,6 +3,7 @@ import {
   listRoles,
   createUser,
   updateUser,
+  deleteUser,
 } from '../api/users.js';
 import { listEmployees } from '../api/employees.js';
 import { listDepartments } from '../api/departments.js';
@@ -192,7 +193,10 @@ async function renderUserTable() {
           if (u.isActive) {
             action = `<button type="button" class="btn btn-sm btn-del" data-deactivate-user="${u.id}">Deactivate</button>`;
           } else {
-            action = `<button type="button" class="btn btn-sm btn-edit" data-activate-user="${u.id}">Activate</button>`;
+            action = `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+              <button type="button" class="btn btn-sm btn-edit" data-activate-user="${u.id}">Activate</button>
+              <button type="button" class="btn btn-sm btn-del" data-delete-user="${u.id}">Delete forever</button>
+            </div>`;
           }
         } else {
           action = `<span style="font-size:11px;color:var(--text-3);">Protected</span>`;
@@ -223,6 +227,13 @@ async function renderUserTable() {
         });
       });
     });
+    document.querySelectorAll('[data-delete-user]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        permanentlyDeleteUser(btn.dataset.deleteUser).catch((err) => {
+          showToast(err instanceof ApiError ? err.message : 'Delete failed.', 'error');
+        });
+      });
+    });
   } catch (err) {
     const msg =
       err instanceof ApiError && err.status === 403
@@ -242,6 +253,19 @@ async function toggleUserActive(id, isActive) {
   if (!confirm(`${verb[0].toUpperCase() + verb.slice(1)} this user?`)) return;
   await updateUser(id, { isActive });
   showToast(`User ${verb}d.`, 'success');
+  await renderUserTable();
+}
+
+async function permanentlyDeleteUser(id) {
+  if (
+    !confirm(
+      'Permanently delete this inactive user?\n\nThis cannot be undone. Audit history will keep the action but clear the deleted account link.',
+    )
+  ) {
+    return;
+  }
+  await deleteUser(id);
+  showToast('User deleted permanently.', 'success');
   await renderUserTable();
 }
 
