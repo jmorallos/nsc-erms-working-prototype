@@ -10,6 +10,7 @@ import {
   listEmploymentTypes,
   listEmploymentStatuses,
 } from '../api/departments.js';
+import { uploadEmployeePhoto, employeePhotoUrl } from '../api/documents.js';
 import { ApiError } from '../api/client.js';
 import { getEl, getInitials, getToday } from '../utils/helpers.js';
 import { showToast } from '../utils/toast.js';
@@ -19,6 +20,8 @@ let _editingEmpId = null;
 let _getSearchQuery = () => '';
 let _employmentTypes = [];
 let _employmentStatuses = [];
+let _pendingPhotoFile = null;
+let _previewObjectUrl = null;
 
 export function initEmployeeModal(getSearchQuery) {
   _getSearchQuery = getSearchQuery;
@@ -41,6 +44,11 @@ export function initEmployeeModal(getSearchQuery) {
 
 export async function openEmployeeModal(empId = null) {
   _editingEmpId = empId;
+  _pendingPhotoFile = null;
+  if (_previewObjectUrl) {
+    URL.revokeObjectURL(_previewObjectUrl);
+    _previewObjectUrl = null;
+  }
   getEl('emp-modal-title').textContent = empId ? 'Edit Employee' : 'Add Employee';
   getEl('pic-input').value = '';
   getEl('emp-overlay').classList.add('open');
@@ -62,13 +70,21 @@ export async function openEmployeeModal(empId = null) {
 export function closeEmployeeModal() {
   getEl('emp-overlay').classList.remove('open');
   _editingEmpId = null;
+  _pendingPhotoFile = null;
+  if (_previewObjectUrl) {
+    URL.revokeObjectURL(_previewObjectUrl);
+    _previewObjectUrl = null;
+  }
 }
 
 function previewPhoto(input) {
   const file = input.files[0];
   if (!file) return;
-  showToast('Photo upload to server will be enabled with document storage.', 'info');
-  input.value = '';
+  _pendingPhotoFile = file;
+  if (_previewObjectUrl) URL.revokeObjectURL(_previewObjectUrl);
+  _previewObjectUrl = URL.createObjectURL(file);
+  getEl('pic-preview').outerHTML =
+    `<img id="pic-preview" src="${_previewObjectUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2.5px solid var(--blue-500);" alt=""/>`;
 }
 
 async function loadDeptOptions() {
@@ -175,12 +191,17 @@ async function saveEmployee() {
   const btn = getEl('emp-modal-save');
   btn.disabled = true;
   try {
+    let employeeId = _editingEmpId;
     if (_editingEmpId) {
       await updateEmployee(_editingEmpId, payload);
       showToast('Employee updated.', 'success');
     } else {
-      await createEmployee(payload);
+      const { employee } = await createEmployee(payload);
+      employeeId = employee.id;
       showToast('Employee added.', 'success');
+    }
+    if (_pendingPhotoFile && employeeId) {
+      await uploadEmployeePhoto(employeeId, _pendingPhotoFile);
     }
     closeEmployeeModal();
     await renderEmployeeTable(_getSearchQuery());
@@ -210,10 +231,20 @@ async function prefillForm(emp) {
   }
 
   const prevEl = getEl('pic-preview');
-  prevEl.outerHTML = `<div id="pic-preview" class="pic-ini">${getInitials(emp.firstName, emp.lastName)}</div>`;
+  if (emp.photoUrl || emp.profilePicturePath) {
+    prevEl.outerHTML =
+      `<img id="pic-preview" src="${emp.photoUrl || employeePhotoUrl(emp.id)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2.5px solid var(--blue-500);" alt=""/>`;
+  } else {
+    prevEl.outerHTML = `<div id="pic-preview" class="pic-ini">${getInitials(emp.firstName, emp.lastName)}</div>`;
+  }
 }
 
 function clearForm() {
+  _pendingPhotoFile = null;
+  if (_previewObjectUrl) {
+    URL.revokeObjectURL(_previewObjectUrl);
+    _previewObjectUrl = null;
+  }
   ['f-fname', 'f-lname', 'f-email', 'f-contact', 'f-address'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = '';

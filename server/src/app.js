@@ -14,6 +14,8 @@ import { lookupsRouter } from './routes/lookups.js';
 import { departmentsRouter } from './routes/departments.js';
 import { employeesRouter } from './routes/employees.js';
 import { usersRouter } from './routes/users.js';
+import { documentsRouter, documentItemRouter } from './routes/documents.js';
+import { scanInboxRouter } from './routes/scanInbox.js';
 
 const PgSession = connectPgSimple(session);
 
@@ -69,7 +71,10 @@ export function createApp() {
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/lookups', lookupsRouter);
   app.use('/api/v1/departments', departmentsRouter);
+  app.use('/api/v1/employees/:employeeId/documents', documentsRouter);
   app.use('/api/v1/employees', employeesRouter);
+  app.use('/api/v1/documents', documentItemRouter);
+  app.use('/api/v1/scan-inbox', scanInboxRouter);
   app.use('/api/v1/users', usersRouter);
 
   // Serve existing Vite SPA folder in Phase 0; production will use built assets

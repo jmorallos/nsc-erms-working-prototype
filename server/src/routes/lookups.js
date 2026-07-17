@@ -76,3 +76,24 @@ lookupsRouter.get('/employment-statuses', async (_req, res, next) => {
     next(err);
   }
 });
+
+lookupsRouter.get('/document-types', async (_req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT id, name, description, is_required
+       FROM document_types
+       WHERE is_active = TRUE
+       ORDER BY name`,
+    );
+    res.json({
+      documentTypes: rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        isRequired: r.is_required,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});

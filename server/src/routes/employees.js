@@ -1,8 +1,15 @@
 import { Router } from 'express';
+import fs from 'node:fs';
+import multer from 'multer';
 import { ulid } from 'ulid';
 import { query, withClient } from '../db/pool.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
+import { getFilesRoot, getMaxUploadBytes } from '../services/settings.js';
+import {
+  absoluteFromRelative,
+  writeEmployeePhoto,
+} from '../services/files.js';
 
 export const employeesRouter = Router();
 
@@ -64,6 +71,9 @@ function mapEmployee(row) {
     contactNumber: row.contact_number,
     address: row.address,
     profilePicturePath: row.profile_picture_path,
+    photoUrl: row.profile_picture_path
+      ? `/api/v1/employees/${row.id}/photo`
+      : null,
     remarks: row.remarks,
     assignment: row.assignment_id
       ? {
@@ -362,6 +372,79 @@ employeesRouter.delete('/:id', writeRoles, async (req, res, next) => {
     );
 
     res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+employeesRouter.post('/:id/photo', writeRoles, async (req, res, next) => {
+  try {
+    const maxBytes = await getMaxUploadBytes();
+    const upload = multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: maxBytes },
+      fileFilter(_req, file, cb) {
+        if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.mimetype)) {
+          return cb(new Error('Only JPEG/PNG/WebP photos are allowed'));
+        }
+        cb(null, true);
+      },
+    }).single('photo');
+
+    upload(req, res, async (err) => {
+      try {
+        if (err) {
+          throw new HttpError(400, err.message || 'Upload failed', 'VALIDATION');
+        }
+        if (!req.file) throw new HttpError(400, 'photo is required', 'VALIDATION');
+
+        const { rows: emp } = await query(
+          `SELECT id FROM employees WHERE id = $1 AND deleted_at IS NULL`,
+          [req.params.id],
+        );
+        if (!emp[0]) throw new HttpError(404, 'Employee not found', 'NOT_FOUND');
+
+        const saved = await writeEmployeePhoto({
+          employeeId: req.params.id,
+          originalName: req.file.originalname,
+          buffer: req.file.buffer,
+        });
+
+        const { rows } = await query(
+          `UPDATE employees
+           SET profile_picture_path = $2, updated_at = NOW(), updated_by = $3
+           WHERE id = $1
+           RETURNING id, profile_picture_path`,
+          [req.params.id, saved.relativePath, req.session.userId],
+        );
+
+        res.json({
+          employeeId: rows[0].id,
+          profilePicturePath: rows[0].profile_picture_path,
+          photoUrl: `/api/v1/employees/${rows[0].id}/photo`,
+        });
+      } catch (e) {
+        next(e);
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+employeesRouter.get('/:id/photo', async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT profile_picture_path FROM employees WHERE id = $1 AND deleted_at IS NULL`,
+      [req.params.id],
+    );
+    const pathRel = rows[0]?.profile_picture_path;
+    if (!pathRel) throw new HttpError(404, 'No photo', 'NOT_FOUND');
+
+    const root = await getFilesRoot();
+    const abs = absoluteFromRelative(root, pathRel);
+    if (!fs.existsSync(abs)) throw new HttpError(404, 'Photo missing on disk', 'NOT_FOUND');
+    res.sendFile(abs);
   } catch (err) {
     next(err);
   }

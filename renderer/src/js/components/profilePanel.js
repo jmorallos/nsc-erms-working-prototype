@@ -96,7 +96,10 @@ function renderTabEmployment(emp) {
 
 function renderPanelHeader(emp) {
   const a = emp.assignment;
-  const pic = `<div class="ph-ini-lg">${getInitials(emp.firstName, emp.lastName)}</div>`;
+  const pic =
+    emp.photoUrl || emp.profilePicturePath
+      ? `<img src="${emp.photoUrl || `/api/v1/employees/${emp.id}/photo`}" class="ph-avatar-lg" alt=""/>`
+      : `<div class="ph-ini-lg">${getInitials(emp.firstName, emp.lastName)}</div>`;
 
   setHTML(
     'panel-header',

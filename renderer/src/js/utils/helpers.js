@@ -45,9 +45,12 @@ export function getSourceTag(source) {
 export function getAvatarHTML(employee, size = 32, fontSize = 11) {
   const first = employee.firstName ?? employee.fname ?? '';
   const last = employee.lastName ?? employee.lname ?? '';
-  if (employee.profilePicturePath || employee.picture) {
-    const src = escapeHtml(employee.profilePicturePath || employee.picture);
-    return `<img src="${src}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt=""/>`;
+  const src = employee.photoUrl
+    || (employee.profilePicturePath
+      ? `/api/v1/employees/${employee.id}/photo`
+      : employee.picture);
+  if (src) {
+    return `<img src="${escapeHtml(src)}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt=""/>`;
   }
   return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${fontSize}px;">${escapeHtml(getInitials(first, last))}</div>`;
 }

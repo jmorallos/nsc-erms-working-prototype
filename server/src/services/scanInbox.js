@@ -1,0 +1,151 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { config } from '../config.js';
+import { getAppSetting, getFilesRoot, getMaxUploadBytes } from './settings.js';
+
+const ALLOWED_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']);
+
+const MIME_BY_EXT = {
+  '.pdf': 'application/pdf',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+export async function getScanInboxPath() {
+  const fromDb = await getAppSetting('scan_inbox_path', null);
+  if (typeof fromDb === 'string' && fromDb.trim()) return fromDb.trim();
+  if (config.scanInboxPath) return config.scanInboxPath;
+  const root = await getFilesRoot();
+  return path.join(root, 'inbox');
+}
+
+export async function ensureInboxDirs() {
+  const inbox = await getScanInboxPath();
+  const processed = path.join(inbox, 'processed');
+  const failed = path.join(inbox, 'failed');
+  for (const dir of [inbox, processed, failed]) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return { inbox, processed, failed };
+}
+
+function isStableFile(absPath) {
+  try {
+    const a = fs.statSync(absPath);
+    // Skip directories and zero-byte placeholders still being written
+    if (!a.isFile() || a.size === 0) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function listInboxFiles() {
+  const { inbox } = await ensureInboxDirs();
+  const maxBytes = await getMaxUploadBytes();
+  const entries = fs.readdirSync(inbox, { withFileTypes: true });
+
+  const files = [];
+  for (const ent of entries) {
+    if (!ent.isFile()) continue;
+    const ext = path.extname(ent.name).toLowerCase();
+    if (!ALLOWED_EXT.has(ext)) continue;
+
+    const abs = path.join(inbox, ent.name);
+    if (!isStableFile(abs)) continue;
+
+    const st = fs.statSync(abs);
+    files.push({
+      name: ent.name,
+      size: st.size,
+      mimeType: MIME_BY_EXT[ext] || 'application/octet-stream',
+      modifiedAt: st.mtime.toISOString(),
+      tooLarge: st.size > maxBytes,
+      maxBytes,
+    });
+  }
+
+  files.sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
+  return { inboxPath: inbox, files };
+}
+
+export function resolveInboxFile(inbox, fileName) {
+  const base = path.basename(fileName);
+  if (base !== fileName || fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+    throw new Error('Invalid file name');
+  }
+  const abs = path.join(inbox, base);
+  const resolved = path.resolve(abs);
+  if (!resolved.startsWith(path.resolve(inbox))) {
+    throw new Error('Invalid file path');
+  }
+  return { base, abs: resolved };
+}
+
+export async function rejectInboxFile(fileName, reason = '') {
+  const { inbox, failed } = await ensureInboxDirs();
+  const { base, abs } = resolveInboxFile(inbox, fileName);
+  if (!fs.existsSync(abs)) throw Object.assign(new Error('File not found'), { code: 'NOT_FOUND' });
+
+  const destName = `${Date.now()}_${base}`;
+  const dest = path.join(failed, destName);
+  fs.renameSync(abs, dest);
+  if (reason) {
+    fs.writeFileSync(`${dest}.reason.txt`, reason, 'utf8');
+  }
+  return { movedTo: dest };
+}
+
+/**
+ * Move inbox file into employee documents folder and return storage metadata.
+ */
+export async function claimInboxFileForEmployee({ fileName, employeeId, documentId }) {
+  const { inbox, processed } = await ensureInboxDirs();
+  const maxBytes = await getMaxUploadBytes();
+  const { base, abs } = resolveInboxFile(inbox, fileName);
+
+  if (!fs.existsSync(abs)) {
+    throw Object.assign(new Error('File not found in inbox'), { code: 'NOT_FOUND' });
+  }
+
+  const st = fs.statSync(abs);
+  if (st.size > maxBytes) {
+    throw Object.assign(new Error(`File exceeds ${maxBytes} bytes`), { code: 'TOO_LARGE' });
+  }
+
+  const ext = path.extname(base).toLowerCase();
+  if (!ALLOWED_EXT.has(ext)) {
+    throw Object.assign(new Error('File type not allowed'), { code: 'VALIDATION' });
+  }
+
+  const root = await getFilesRoot();
+  const empDir = path.join(root, 'employees', employeeId, 'documents');
+  fs.mkdirSync(empDir, { recursive: true });
+
+  const storedName = `${documentId}_${base}`;
+  const destAbs = path.join(empDir, storedName);
+  fs.renameSync(abs, destAbs);
+
+  // Keep a copy reference in processed (empty marker with original name)
+  try {
+    fs.writeFileSync(
+      path.join(processed, `${Date.now()}_${base}.claimed.txt`),
+      `employeeId=${employeeId}\ndocumentId=${documentId}\n`,
+      'utf8',
+    );
+  } catch {
+    /* non-fatal */
+  }
+
+  const relativePath = path.relative(root, destAbs).split(path.sep).join('/');
+  return {
+    originalName: base,
+    storedName,
+    relativePath,
+    fileSize: st.size,
+    mimeType: MIME_BY_EXT[ext] || 'application/octet-stream',
+  };
+}
